@@ -1,5 +1,6 @@
 from django import forms
 from .models import Task
+from .services.webhook_services import WebHookWorkFlowServices
 
 
 class TaskForm(forms.ModelForm):
@@ -30,3 +31,13 @@ class TaskForm(forms.ModelForm):
             'description': '任务描述',
             'is_completed': '是否完成'
         }
+
+    def save(self, commit=True):
+        # 触发推送流程
+        data = {
+            "code": self.instance.code,
+            "rich_text_test": self.instance.title
+        }
+        services = WebHookWorkFlowServices(data)
+        services.trigger_complete_workflow()
+        return super().save(commit=commit)

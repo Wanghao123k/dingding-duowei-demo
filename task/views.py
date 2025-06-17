@@ -1,6 +1,7 @@
 import json
 import logging
 
+from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.core.paginator import Paginator
@@ -9,6 +10,7 @@ from django.views.decorators.http import require_http_methods
 
 from .models import Task
 from .forms import TaskForm
+from .services.webhook_services import WebHookWorkFlow, WebHookWorkFlowServices
 
 # 配置日志
 logger = logging.getLogger(__name__)
@@ -113,19 +115,51 @@ def task_detail(request, pk):
 def webhook_receiver(request):
     """接受第三方系统推送的数据，并立即转发到第二个钉钉地址"""
     session_id = request.GET.get('session')
-
+    data = WebHookWorkFlow.get_workflow(session_id).get("data")
+    work_flow = WebHookWorkFlow(data)
     try:
         # 解析请求数据
         if request.content_type == "application/json":
-            data = json.loads(request.body.decode('utf-8'))
+            request_data = json.loads(request.body.decode('utf-8').replace("null", ""))
         else:
-            data = dict(request.POST)
+            request_data = dict(request.POST)
 
-        logger.info(f"接收到webhook数据 [Session: {session_id}]: {data}")
+        logger.info(f"接收到webhook数据 [Session: {session_id}]: {request_data}")
+
+        # 检查会话状态
+        if session_id:
+            status_data = work_flow.get_status(session_id)
+            if not status_data:
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "message": "会话不存在或已过期",
+                        "session_id": session_id
+                    }, status=400
+                )
+            if work_flow.is_timeout(session_id):
+                work_flow.fail_workflow(session_id, "会话超时")
+                return JsonResponse({
+                    'success': False,
+                    'message': '会话已超时',
+                    'session_id': session_id
+                }, status=408)
+            # 设置为处理状态
+            work_flow.process_callback(session_id)
+
+        # 合并收到的数据
+        merge_data = WebHookWorkFlowServices.merge_data(data,request_data)
+        sync_result = WebHookWorkFlowServices.sync_to_dingtalk(merge_data)
+        if session_id:
+            work_flow.complete_workflow(session_id, {
+                'merge_data': merge_data,
+                'sync_result': sync_result
+            })
+
     except json.JSONDecodeError:
         error_msg = "JSON解析错误"
         if session_id:
-            workflow_manager.fail_workflow(session_id, error_msg)
+            work_flow.fail_workflow(session_id, error_msg)
         logger.error(error_msg)
         return JsonResponse({
             'success': False,
@@ -135,10 +169,14 @@ def webhook_receiver(request):
     except Exception as e:
         error_msg = f"Webhook处理异常: {str(e)}"
         if session_id:
-            workflow_manager.fail_workflow(session_id, error_msg)
+            work_flow.fail_workflow(session_id, error_msg)
         logger.error(error_msg)
         return JsonResponse({
             'success': False,
             'message': error_msg,
             'session_id': session_id
         }, status=500)
+
+    return JsonResponse({
+        'success': True,
+    })

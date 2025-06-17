@@ -116,9 +116,19 @@ class WebHookWorkFlow:
     def get_workflow(cls, session_id):
         return cache.get(f'workflow_status_{session_id}')
 
+    def is_timeout(self, session_id):
+        # status_data = self.get_status(session_id)
+        # if not status_data:
+        #     return True
+        #
+        # start_time = datetime.fromisoformat(status_data['start_time'].replace('Z', '+00:00'))
+        # return (timezone.now() - start_time).total_seconds() > self.timeout
+        return False
+
 class WebHookWorkFlowServices:
     def __init__(self, data):
         self.webhook_workflow = WebHookWorkFlow(data)
+        self.data = data
 
     def trigger_complete_workflow(self):
         # 生成会话ID
@@ -131,9 +141,10 @@ class WebHookWorkFlowServices:
                 'timestamp': timezone.now().isoformat(),
                 'source': 'django_task_system',
                 'session_id': session_id,
-                'webhook_url': f'http://127.0.0.1:8000/webhook/receiver/?session={session_id}',
+                'webhook_url': f'https://4b11-2409-8a1e-9310-2000-edce-f141-9214-de83.ngrok-free.app/webhook/receiver/?session={session_id}',
                 'callback_required': True,
-                'message': '启动完整数据同步工作流程'
+                'message': '启动完整数据同步工作流程',
+                **self.data
             }
             logger.info(f"发送触发请求: {session_id}")
             # 发送触发请求到第一个钉钉地址
@@ -153,7 +164,7 @@ class WebHookWorkFlowServices:
                     'session_id': session_id,
                     'status': 'waiting_for_callback',
                     'message': '触发成功，等待第三方系统回调',
-                    'webhook_url': f'http://127.0.0.1:8000/webhook/receiver/?session={session_id}',
+                    'webhook_url': f'https://daa2-2409-8a1e-9310-2000-edce-f141-9214-de83.grok-free.app/webhook/receiver/?session={session_id}',
                     'response': response.json()
                 }
             else:
@@ -183,3 +194,24 @@ class WebHookWorkFlowServices:
                 'success': False,
                 'error': error_msg
             }
+
+    @classmethod
+    def merge_data(cls, data, request_data):
+        rich_text_test_str = "/n".join(request_data.get("rich_text_test", []))
+        data["rich_text_test"] = data["rich_text_test"] + (("/n" + rich_text_test_str) if rich_text_test_str != "" else "")
+        return data
+
+    @classmethod
+    def sync_to_dingtalk(cls, merge_data):
+        """
+        将处理后的数据同步到钉钉
+        支持特定格式的数据重组装
+        """
+        # 发送请求到钉钉
+        response = requests.post(
+            DINGTALK_SYNC_URL,
+            json=merge_data,
+            headers={'Content-Type': 'application/json'},
+            timeout=30
+        )
+        return response.json()
