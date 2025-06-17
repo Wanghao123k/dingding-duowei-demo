@@ -1,10 +1,17 @@
+import json
+import logging
+
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q
+from django.views.decorators.http import require_http_methods
+
 from .models import Task
 from .forms import TaskForm
 
+# 配置日志
+logger = logging.getLogger(__name__)
 
 def task_list(request):
     """任务列表视图"""
@@ -101,3 +108,37 @@ def task_detail(request, pk):
         'task': task
     }
     return render(request, 'tasks/task_detail.html', context)
+
+@require_http_methods(['GET', 'POST'])
+def webhook_receiver(request):
+    """接受第三方系统推送的数据，并立即转发到第二个钉钉地址"""
+    session_id = request.GET.get('session')
+
+    try:
+        # 解析请求数据
+        if request.content_type == "application/json":
+            data = json.loads(request.body.decode('utf-8'))
+        else:
+            data = dict(request.POST)
+
+        logger.info(f"接收到webhook数据 [Session: {session_id}]: {data}")
+    except json.JSONDecodeError:
+        error_msg = "JSON解析错误"
+        if session_id:
+            workflow_manager.fail_workflow(session_id, error_msg)
+        logger.error(error_msg)
+        return JsonResponse({
+            'success': False,
+            'message': error_msg,
+            'session_id': session_id
+        }, status=400)
+    except Exception as e:
+        error_msg = f"Webhook处理异常: {str(e)}"
+        if session_id:
+            workflow_manager.fail_workflow(session_id, error_msg)
+        logger.error(error_msg)
+        return JsonResponse({
+            'success': False,
+            'message': error_msg,
+            'session_id': session_id
+        }, status=500)
