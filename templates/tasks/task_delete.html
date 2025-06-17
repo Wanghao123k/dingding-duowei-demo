@@ -1,0 +1,346 @@
+{% extends 'base.html' %}
+
+{% block title %}删除任务 - {{ task.title }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="mb-1">
+                <i class="fas fa-exclamation-triangle text-danger me-2"></i>删除任务
+            </h1>
+            <p class="mb-0">请确认是否要删除此任务</p>
+        </div>
+        <div class="btn-group" role="group">
+            <a href="{% url 'task_detail' task.pk %}" class="btn btn-outline-light">
+                <i class="fas fa-arrow-left me-2"></i>返回详情
+            </a>
+            <a href="{% url 'task_list' %}" class="btn btn-outline-light">
+                <i class="fas fa-list me-2"></i>返回列表
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <!-- 警告提示 -->
+        <div class="alert alert-danger d-flex align-items-center" role="alert">
+            <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+            <div>
+                <h5 class="alert-heading mb-1">危险操作警告</h5>
+                <p class="mb-0">
+                    您即将删除任务 "<strong>{{ task.title }}</strong>"，此操作不可撤销。
+                    请仔细确认后再进行操作。
+                </p>
+            </div>
+        </div>
+
+        <!-- 任务信息预览 -->
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>即将删除的任务信息
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-2">
+                            <i class="fas fa-heading me-2"></i>任务标题
+                        </h6>
+                        <h5 class="text-primary">{{ task.title }}</h5>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-2">
+                            <i class="fas fa-code me-2"></i>任务代码
+                        </h6>
+                        <code class="fs-6 text-dark bg-light p-2 rounded">{{ task.code }}</code>
+                    </div>
+                </div>
+
+                {% if task.description %}
+                    <div class="mb-3">
+                        <h6 class="text-muted mb-2">
+                            <i class="fas fa-align-left me-2"></i>任务描述
+                        </h6>
+                        <div class="bg-light p-3 rounded">
+                            <p class="mb-0">{{ task.description|truncatewords:30 }}</p>
+                            {% if task.description|wordcount > 30 %}
+                                <small class="text-muted">...</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6 class="text-muted mb-2">
+                            <i class="fas fa-calendar-plus me-2"></i>创建时间
+                        </h6>
+                        <p class="mb-0">
+                            <span class="badge bg-light text-dark">
+                                {{ task.created_at|date:"Y-m-d H:i" }}
+                            </span>
+                        </p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-muted mb-2">
+                            <i class="fas fa-calendar-alt me-2"></i>最后更新
+                        </h6>
+                        <p class="mb-0">
+                            <span class="badge bg-light text-dark">
+                                {{ task.updated_at|date:"Y-m-d H:i" }}
+                            </span>
+                        </p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-muted mb-2">
+                            <i class="fas fa-flag me-2"></i>当前状态
+                        </h6>
+                        <p class="mb-0">
+                            {% if task.is_completed %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check me-1"></i>已完成
+                                </span>
+                            {% else %}
+                                <span class="badge bg-warning">
+                                    <i class="fas fa-clock me-1"></i>进行中
+                                </span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 删除确认表单 -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-check-circle me-2"></i>确认删除
+                </h6>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <!-- 确认复选框 -->
+                    <div class="mb-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="confirmDelete" required>
+                            <label class="form-check-label" for="confirmDelete">
+                                <strong>我确认要删除此任务，并理解此操作不可撤销</strong>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- 删除原因（可选） -->
+                    <div class="mb-4">
+                        <label for="deleteReason" class="form-label">
+                            <i class="fas fa-comment me-2"></i>删除原因（可选）
+                        </label>
+                        <textarea class="form-control" id="deleteReason" rows="3" 
+                                  placeholder="请简述删除此任务的原因..."></textarea>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>此信息仅用于记录，不会影响删除操作
+                        </div>
+                    </div>
+
+                    <!-- 按钮组 -->
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <button type="submit" class="btn btn-danger btn-lg me-3" id="deleteButton" disabled>
+                                <i class="fas fa-trash me-2"></i>确认删除
+                            </button>
+                            <a href="{% url 'task_detail' task.pk %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>取消
+                            </a>
+                        </div>
+                        <div class="text-muted small">
+                            <i class="fas fa-clock me-1"></i>
+                            操作将在确认后立即执行
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 替代操作建议 -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>其他操作建议
+                </h6>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-3">
+                    如果您不确定是否要删除此任务，可以考虑以下替代方案：
+                </p>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="text-center p-3 border rounded">
+                            <i class="fas fa-edit fa-2x text-primary mb-2"></i>
+                            <h6>编辑任务</h6>
+                            <p class="small text-muted mb-3">修改任务信息而非删除</p>
+                            <a href="{% url 'task_update' task.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-edit me-1"></i>编辑
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center p-3 border rounded">
+                            <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                            <h6>标记完成</h6>
+                            <p class="small text-muted mb-3">将任务标记为已完成</p>
+                            {% if not task.is_completed %}
+                                <button class="btn btn-sm btn-outline-success" onclick="markCompleted()">
+                                    <i class="fas fa-check me-1"></i>完成
+                                </button>
+                            {% else %}
+                                <span class="badge bg-success">已完成</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center p-3 border rounded">
+                            <i class="fas fa-copy fa-2x text-info mb-2"></i>
+                            <h6>复制任务</h6>
+                            <p class="small text-muted mb-3">基于此任务创建新任务</p>
+                            <a href="{% url 'task_create' %}?copy={{ task.pk }}" class="btn btn-sm btn-outline-info">
+                                <i class="fas fa-copy me-1"></i>复制
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 侧边帮助 -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-question-circle me-2"></i>删除须知
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>重要提醒：</strong>删除操作不可恢复
+                </div>
+                
+                <h6><i class="fas fa-trash me-2"></i>删除后将失去：</h6>
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-check text-danger me-2"></i>任务的所有信息</li>
+                    <li><i class="fas fa-check text-danger me-2"></i>任务的历史记录</li>
+                    <li><i class="fas fa-check text-danger me-2"></i>与此任务相关的数据</li>
+                </ul>
+                
+                <hr>
+                
+                <h6><i class="fas fa-shield-alt me-2"></i>安全提示：</h6>
+                <p class="small text-muted mb-0">
+                    系统会在删除前要求您确认操作。
+                    请仔细检查任务信息，确保这确实是您想要删除的任务。
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card-header.bg-danger {
+        border-bottom: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    .btn-danger:disabled {
+        background-color: #dc3545;
+        border-color: #dc3545;
+        opacity: 0.5;
+    }
+    
+    .form-check-input:checked {
+        background-color: #dc3545;
+        border-color: #dc3545;
+    }
+    
+    .border {
+        border-color: #dee2e6 !important;
+        transition: all 0.3s ease;
+    }
+    
+    .border:hover {
+        border-color: #adb5bd !important;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const confirmCheckbox = document.getElementById('confirmDelete');
+        const deleteButton = document.getElementById('deleteButton');
+        
+        // 监听确认复选框变化
+        confirmCheckbox.addEventListener('change', function() {
+            deleteButton.disabled = !this.checked;
+            
+            if (this.checked) {
+                deleteButton.classList.remove('btn-outline-danger');
+                deleteButton.classList.add('btn-danger');
+            } else {
+                deleteButton.classList.remove('btn-danger');
+                deleteButton.classList.add('btn-outline-danger');
+            }
+        });
+        
+        // 删除表单提交前最后确认
+        deleteButton.addEventListener('click', function(e) {
+            if (!confirm('最后确认：您真的要删除任务 "{{ task.title|escapejs }}" 吗？\n\n此操作无法撤销！')) {
+                e.preventDefault();
+            }
+        });
+    });
+    
+    function markCompleted() {
+        if (confirm('将此任务标记为已完成？')) {
+            // 创建表单并提交到编辑页面
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '{% url "task_update" task.pk %}';
+            
+            // 添加CSRF token
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = '{{ csrf_token }}';
+            form.appendChild(csrfInput);
+            
+            // 添加表单字段
+            const fields = {
+                'title': '{{ task.title|escapejs }}',
+                'code': '{{ task.code|escapejs }}',
+                'description': '{{ task.description|escapejs }}',
+                'is_completed': 'on'
+            };
+            
+            for (const [name, value] of Object.entries(fields)) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = name;
+                input.value = value;
+                form.appendChild(input);
+            }
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+</script>
+{% endblock %} 

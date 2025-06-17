@@ -1,0 +1,38 @@
+# 设置默认行为，自动规范化行尾并转换为原生格式
+* text=auto
+
+# Python 文件使用 LF 行尾
+*.py text eol=lf
+
+# HTML, CSS, JS 文件使用 LF 行尾
+*.html text eol=lf
+*.css text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+
+# 配置文件使用 LF 行尾
+*.yml text eol=lf
+*.yaml text eol=lf
+*.toml text eol=lf
+*.ini text eol=lf
+*.cfg text eol=lf
+
+# 文档文件使用 LF 行尾
+*.md text eol=lf
+*.txt text eol=lf
+*.rst text eol=lf
+
+# Windows 批处理文件使用 CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# 二进制文件不进行行尾转换
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.tar.gz binary
+*.sqlite3 binary 

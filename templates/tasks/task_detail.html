@@ -1,0 +1,378 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ task.title }} - 任务详情{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="mb-1">
+                <i class="fas fa-eye me-2"></i>任务详情
+            </h1>
+            <p class="mb-0">查看任务 "{{ task.title }}" 的详细信息</p>
+        </div>
+        <div class="btn-group" role="group">
+            <a href="{% url 'task_list' %}" class="btn btn-outline-light">
+                <i class="fas fa-arrow-left me-2"></i>返回列表
+            </a>
+            <a href="{% url 'task_update' task.pk %}" class="btn btn-light">
+                <i class="fas fa-edit me-2"></i>编辑
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- 主要信息 -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>基本信息
+                    </h5>
+                    <div>
+                        {% if task.is_completed %}
+                            <span class="badge bg-success">
+                                <i class="fas fa-check me-1"></i>已完成
+                            </span>
+                        {% else %}
+                            <span class="badge bg-warning">
+                                <i class="fas fa-clock me-1"></i>进行中
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-2">
+                            <i class="fas fa-heading me-2"></i>任务标题
+                        </h6>
+                        <h4 class="text-primary">{{ task.title }}</h4>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-2">
+                            <i class="fas fa-code me-2"></i>任务代码
+                        </h6>
+                        <code class="fs-5 text-dark bg-light p-2 rounded">{{ task.code }}</code>
+                    </div>
+                </div>
+
+                {% if task.description %}
+                    <div class="mb-4">
+                        <h6 class="text-muted mb-2">
+                            <i class="fas fa-align-left me-2"></i>任务描述
+                        </h6>
+                        <div class="bg-light p-3 rounded">
+                            <p class="mb-0">{{ task.description|linebreaks }}</p>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-2">
+                            <i class="fas fa-calendar-plus me-2"></i>创建时间
+                        </h6>
+                        <p class="mb-3">
+                            <span class="badge bg-light text-dark">
+                                {{ task.created_at|date:"Y年m月d日 H:i:s" }}
+                            </span>
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-2">
+                            <i class="fas fa-calendar-alt me-2"></i>最后更新
+                        </h6>
+                        <p class="mb-3">
+                            <span class="badge bg-light text-dark">
+                                {{ task.updated_at|date:"Y年m月d日 H:i:s" }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 任务状态进度条 -->
+                <div class="mt-4">
+                    <h6 class="text-muted mb-2">
+                        <i class="fas fa-tasks me-2"></i>任务进度
+                    </h6>
+                    <div class="progress" style="height: 25px;">
+                        {% if task.is_completed %}
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 100%">
+                                <strong>100% 完成</strong>
+                            </div>
+                        {% else %}
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: 50%">
+                                <strong>50% 进行中</strong>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 操作历史 -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-history me-2"></i>操作历史
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-success">
+                            <i class="fas fa-plus text-white"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <h6 class="mb-1">任务创建</h6>
+                            <p class="text-muted mb-0">{{ task.created_at|date:"Y年m月d日 H:i:s" }}</p>
+                        </div>
+                    </div>
+                    
+                    {% if task.updated_at != task.created_at %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-info">
+                                <i class="fas fa-edit text-white"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <h6 class="mb-1">任务更新</h6>
+                                <p class="text-muted mb-0">{{ task.updated_at|date:"Y年m月d日 H:i:s" }}</p>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {% if task.is_completed %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-success">
+                                <i class="fas fa-check text-white"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <h6 class="mb-1">任务完成</h6>
+                                <p class="text-muted mb-0">标记为已完成状态</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 侧边栏 -->
+    <div class="col-lg-4">
+        <!-- 快速操作 -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-cogs me-2"></i>快速操作
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'task_update' task.pk %}" class="btn btn-primary">
+                        <i class="fas fa-edit me-2"></i>编辑任务
+                    </a>
+                    
+                    {% if not task.is_completed %}
+                        <button class="btn btn-success" onclick="markAsCompleted()">
+                            <i class="fas fa-check me-2"></i>标记完成
+                        </button>
+                    {% endif %}
+                    
+                    <a href="{% url 'task_delete' task.pk %}" class="btn btn-outline-danger">
+                        <i class="fas fa-trash me-2"></i>删除任务
+                    </a>
+                    
+                    <hr>
+                    
+                    <a href="{% url 'task_create' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-plus me-2"></i>创建新任务
+                    </a>
+                    
+                    <a href="{% url 'task_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-list me-2"></i>返回列表
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 任务统计 -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>任务信息
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="border-end">
+                            <h5 class="text-primary">{{ task.pk }}</h5>
+                            <small class="text-muted">任务ID</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <h5 class="{% if task.is_completed %}text-success{% else %}text-warning{% endif %}">
+                            {% if task.is_completed %}✓{% else %}○{% endif %}
+                        </h5>
+                        <small class="text-muted">状态</small>
+                    </div>
+                </div>
+                
+                <hr class="my-3">
+                
+                <div class="small text-muted">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>存在时长：</span>
+                        <span>{{ task.created_at|timesince }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>字符数：</span>
+                        <span>{{ task.description|length|default:0 }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 相关操作 -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-link me-2"></i>相关操作
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    <a href="#" class="list-group-item list-group-item-action border-0">
+                        <i class="fas fa-copy me-2"></i>复制任务代码
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action border-0">
+                        <i class="fas fa-share me-2"></i>分享任务
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action border-0">
+                        <i class="fas fa-download me-2"></i>导出信息
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+    
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 15px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #e9ecef;
+    }
+    
+    .timeline-item {
+        position: relative;
+        margin-bottom: 20px;
+    }
+    
+    .timeline-marker {
+        position: absolute;
+        left: -22px;
+        top: 5px;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .timeline-content {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        border-left: 3px solid #667eea;
+    }
+    
+    .progress {
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    
+    .progress-bar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function markAsCompleted() {
+        if (confirm('确认将此任务标记为已完成？')) {
+            // 创建表单并提交
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '{% url "task_update" task.pk %}';
+            
+            // 添加CSRF token
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = '{{ csrf_token }}';
+            form.appendChild(csrfInput);
+            
+            // 添加表单字段
+            const fields = {
+                'title': '{{ task.title|escapejs }}',
+                'code': '{{ task.code|escapejs }}',
+                'description': '{{ task.description|escapejs }}',
+                'is_completed': 'on'
+            };
+            
+            for (const [name, value] of Object.entries(fields)) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = name;
+                input.value = value;
+                form.appendChild(input);
+            }
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+    
+    // 复制任务代码到剪贴板
+    document.addEventListener('DOMContentLoaded', function() {
+        const copyButton = document.querySelector('a[href="#"]:has(.fa-copy)');
+        if (copyButton) {
+            copyButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                navigator.clipboard.writeText('{{ task.code }}').then(function() {
+                    // 显示成功提示
+                    const originalText = copyButton.innerHTML;
+                    copyButton.innerHTML = '<i class="fas fa-check me-2"></i>已复制';
+                    copyButton.classList.add('text-success');
+                    
+                    setTimeout(() => {
+                        copyButton.innerHTML = originalText;
+                        copyButton.classList.remove('text-success');
+                    }, 2000);
+                });
+            });
+        }
+    });
+</script>
+{% endblock %} 

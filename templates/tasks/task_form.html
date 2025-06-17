@@ -1,0 +1,279 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if task %}编辑任务{% else %}创建任务{% endif %} - 任务管理系统
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="mb-1">
+                <i class="fas fa-{% if task %}edit{% else %}plus{% endif %} me-2"></i>
+                {% if task %}编辑任务{% else %}创建新任务{% endif %}
+            </h1>
+            <p class="mb-0">
+                {% if task %}修改任务 "{{ task.title }}" 的信息{% else %}填写下方表单来创建新任务{% endif %}
+            </p>
+        </div>
+        <a href="{% url 'task_list' %}" class="btn btn-outline-light">
+            <i class="fas fa-arrow-left me-2"></i>返回列表
+        </a>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-form me-2"></i>任务信息
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    <!-- 任务标题 -->
+                    <div class="mb-4">
+                        <label for="id_title" class="form-label">
+                            <i class="fas fa-heading me-2"></i>任务标题 <span class="text-danger">*</span>
+                        </label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.title.errors %}
+                                    <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>请输入简洁明了的任务标题
+                        </div>
+                    </div>
+
+                    <!-- 任务代码 -->
+                    <div class="mb-4">
+                        <label for="id_code" class="form-label">
+                            <i class="fas fa-code me-2"></i>任务代码 <span class="text-danger">*</span>
+                        </label>
+                        {{ form.code }}
+                        {% if form.code.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.code.errors %}
+                                    <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>唯一的任务标识符，如：TASK-001
+                        </div>
+                    </div>
+
+                    <!-- 任务描述 -->
+                    <div class="mb-4">
+                        <label for="id_description" class="form-label">
+                            <i class="fas fa-align-left me-2"></i>任务描述
+                        </label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.description.errors %}
+                                    <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>详细描述任务的内容和要求（可选）
+                        </div>
+                    </div>
+
+                    <!-- 完成状态 -->
+                    <div class="mb-4">
+                        <div class="form-check">
+                            {{ form.is_completed }}
+                            <label for="id_is_completed" class="form-check-label">
+                                <i class="fas fa-check-circle me-2"></i>标记为已完成
+                            </label>
+                        </div>
+                        {% if form.is_completed.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.is_completed.errors %}
+                                    <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- 按钮组 -->
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <button type="submit" class="btn btn-primary btn-lg me-3">
+                                <i class="fas fa-save me-2"></i>
+                                {% if task %}保存修改{% else %}创建任务{% endif %}
+                            </button>
+                            <a href="{% url 'task_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>取消
+                            </a>
+                        </div>
+                        {% if task %}
+                            <div>
+                                <a href="{% url 'task_detail' task.pk %}" class="btn btn-outline-info me-2">
+                                    <i class="fas fa-eye me-2"></i>查看详情
+                                </a>
+                                <a href="{% url 'task_delete' task.pk %}" class="btn btn-outline-danger">
+                                    <i class="fas fa-trash me-2"></i>删除任务
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if task %}
+            <!-- 任务历史信息 -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-history me-2"></i>任务历史
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-calendar-plus text-success me-2"></i>
+                                <strong>创建时间：</strong>
+                                <span class="ms-2">{{ task.created_at|date:"Y年m月d日 H:i" }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-calendar-alt text-info me-2"></i>
+                                <strong>最后更新：</strong>
+                                <span class="ms-2">{{ task.updated_at|date:"Y年m月d日 H:i" }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- 帮助面板 -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-question-circle me-2"></i>填写指南
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6><i class="fas fa-heading me-2"></i>任务标题</h6>
+                    <p class="small text-muted">
+                        用简洁的语言描述任务的主要目标，建议不超过50个字符。
+                    </p>
+                </div>
+                
+                <div class="mb-3">
+                    <h6><i class="fas fa-code me-2"></i>任务代码</h6>
+                    <p class="small text-muted">
+                        为任务设置唯一的标识符，便于跟踪和引用。例如：PROJ-2024-001
+                    </p>
+                </div>
+                
+                <div class="mb-3">
+                    <h6><i class="fas fa-align-left me-2"></i>任务描述</h6>
+                    <p class="small text-muted">
+                        详细说明任务的具体要求、背景信息和预期结果。
+                    </p>
+                </div>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    <strong>小贴士：</strong>清晰的任务描述有助于提高执行效率！
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    
+    .form-check-input:checked {
+        background-color: #667eea;
+        border-color: #667eea;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+    }
+    
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+        transform: translateY(-1px);
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 自动生成任务代码
+        const titleInput = document.getElementById('id_title');
+        const codeInput = document.getElementById('id_code');
+        
+        if (titleInput && codeInput && !codeInput.value) {
+            titleInput.addEventListener('input', function() {
+                if (!codeInput.value) {
+                    const title = this.value.trim();
+                    if (title) {
+                        // 生成简单的代码建议
+                        const timestamp = new Date().getTime().toString().slice(-6);
+                        const suggestion = 'TASK-' + timestamp;
+                        codeInput.placeholder = '建议：' + suggestion;
+                    }
+                }
+            });
+        }
+        
+        // 表单验证反馈
+        const form = document.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                const requiredFields = form.querySelectorAll('[required]');
+                let isValid = true;
+                
+                requiredFields.forEach(field => {
+                    if (!field.value.trim()) {
+                        field.classList.add('is-invalid');
+                        isValid = false;
+                    } else {
+                        field.classList.remove('is-invalid');
+                        field.classList.add('is-valid');
+                    }
+                });
+                
+                if (!isValid) {
+                    e.preventDefault();
+                    // 滚动到第一个错误字段
+                    const firstError = form.querySelector('.is-invalid');
+                    if (firstError) {
+                        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        firstError.focus();
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %} 
